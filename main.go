@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strconv"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -14,20 +16,19 @@ type Book struct {
 	Author string `json:"author"`
 }
 
-var book []Book
+var books []Book
 
 func main() {
 	app := fiber.New()
 
-	book = append(book, Book{ID: 1, Title: "Book 1", Author: "Author 1"})
-	book = append(book, Book{ID: 2, Title: "Book 2", Author: "Author 2"})
-	book = append(book, Book{ID: 3, Title: "Book 3", Author: "Author 3"})
-	book = append(book, Book{ID: 4, Title: "Book 4", Author: "Author 4"})
-	book = append(book, Book{ID: 5, Title: "Book 5", Author: "Author 5"})
+	books = append(books, Book{ID: 1, Title: "Book 1", Author: "Author 1"})
+	books = append(books, Book{ID: 2, Title: "Book 2", Author: "Author 2"})
 
 	app.Get("/", message)
-	app.Get("/books", GetBooks)
+	app.Get("/books", getBooks)
 	app.Get("/books/:id", getBook)
+	app.Post("/books", createBook)
+
 	app.Listen(":8000")
 }
 
@@ -39,22 +40,35 @@ func message(c *fiber.Ctx) error {
 }
 
 func getBooks(c *fiber.Ctx) error {
-	return c.JSON(book)
+	return c.JSON(books)
 }
 
 func getBook(c *fiber.Ctx) error {
-	id, err := c.ParamsInt("id")
+	bookId, err := strconv.Atoi(c.Params("id"))
 
 	if err != nil {
-		return c.Status(400).SendString("Invalid ID")
+		// return c.SendString(err.Error())
+		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
 
-	for _, b := range book {
-		if b.ID == id {
+	for _, b := range books {
+		if b.ID == bookId {
 			return c.JSON(b)
 		}
 	}
 
-	return c.Status(404).SendString("Book not found")
+	return c.Status(fiber.StatusNotFound).JSON(Message{
+		Message: "Book not found!",
+	})
+}
 
+func createBook(c *fiber.Ctx) error {
+	book := new(Book)
+	// c.BodyParser(book)
+	if err := c.BodyParser(book); err != nil {
+		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+	}
+
+	books = append(books, *book)
+	return c.JSON(book)
 }
