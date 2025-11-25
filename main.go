@@ -36,6 +36,7 @@ func main() {
 
 	books = append(books, Book{ID: 1, Title: "Book 1", Author: "Author 1"})
 	books = append(books, Book{ID: 2, Title: "Book 2", Author: "Author 2"})
+	books = append(books, Book{ID: 3, Title: "Book 3", Author: "Author 3"})
 
 	app.Get("/", message)
 	app.Get("/books", getBooks)
