@@ -1,9 +1,15 @@
 package main
 
 import (
+	"fmt"
+	"log"
+	"os"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/template/html/v2"
+	"github.com/joho/godotenv"
 )
 
 type Message struct {
@@ -18,8 +24,21 @@ type Book struct {
 
 var books []Book
 
+func checkMiddleware(c *fiber.Ctx) error {
+	start := time.Now()
+
+	fmt.Printf("URL = %s, Method = %s, Time = %s\n",
+		c.OriginalURL(), c.Method(), start)
+
+	return c.Next()
+}
+
 func main() {
 	// app := fiber.New()
+
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("load .env error")
+	}
 
 	engine := html.New("./views", ".html")
 
@@ -38,6 +57,10 @@ func main() {
 	books = append(books, Book{ID: 2, Title: "Book 2", Author: "Author 2"})
 	books = append(books, Book{ID: 3, Title: "Book 3", Author: "Author 3"})
 
+	// app.Post("/login")
+
+	app.Use(checkMiddleware)
+
 	app.Get("/", message)
 	app.Get("/books", getBooks)
 	app.Get("/books/:id", getBook)
@@ -48,6 +71,8 @@ func main() {
 	app.Post("/upload", uploadFile)
 
 	app.Get("test-html", testHTML)
+
+	app.Get("/env", getEnv)
 
 	app.Listen(":8000")
 }
@@ -71,5 +96,20 @@ func uploadFile(c *fiber.Ctx) error {
 func testHTML(c *fiber.Ctx) error {
 	return c.Render("index", fiber.Map{
 		"Title": "Hello Nuttaphon",
+	})
+}
+
+func getEnv(c *fiber.Ctx) error {
+
+	secret := os.Getenv("SECRET")
+
+	if secret == "" {
+		return c.JSON(fiber.Map{
+			"SECRET": "Not Found",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"SECRET": os.Getenv("SECRET"),
 	})
 }
