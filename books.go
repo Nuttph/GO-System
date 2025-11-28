@@ -13,6 +13,14 @@ func message(c *fiber.Ctx) error {
 	return c.JSON(message)
 }
 
+// getBooks godoc
+// @Summary Get all books
+// @Description Return list of all books
+// @Tags books
+// @Accept json
+// @Produce json
+// @Success 200 {array} Book
+// @Router /books [get]
 func getBooks(c *fiber.Ctx) error {
 	return c.JSON(books)
 }
